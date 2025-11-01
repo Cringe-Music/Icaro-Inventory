@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <?!=include("styles");?>
+</head>
+
+<body class="grey lighten-4">
+
+  <div class="container">
+    <div class="row">
+      <div class="col s12 m10 offset-m1 l10 offset-l1">
+
+        <!-- === superior (datos usuario / ubicaciones) === -->
+        <div class="row" id="superior">
+          <h2 class="center-align">Icaro inventory</h2>
+
+          <!-- Datos de Usuario - PROBAR OPCIONES CON AUTOCOMPLETADO -->
+          <div class="row">
+            <div class="input-field col s12 m6">
+              <label><b>Usuario de Dominio:</b></label>
+              <i class="material-icons prefix tooltipped" data-tooltip="Ingrese usuario de dominio">badge</i>
+              <input placeholder="Ej: lcamaco" id="userdom" type="text" class="autocomplete tooltipped"
+                onkeyup="mayusculas(this);" onchange="buscarUsuarioDominio(this);"
+                data-tooltip="Usuario de dominio (se autocompleta nombre)" required autocomplete="off">
+            </div>
+
+            <div class="input-field col s12 m6">
+              <label><b>Nombres Completos:</b></label>
+              <i class="material-icons prefix tooltipped" data-tooltip="Nombres completos">person</i>
+              <input placeholder="Nombres completos" id="usuario" type="text" class="validate tooltipped"
+                onkeyup="mayusculas(this);" data-tooltip="Nombres completos del usuario" required autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Ubicación / Departamento -->
+          <div class="row">
+            <div class="col s12 m6">
+              <b>Ubicación:</b>
+              <select id="ubicacion" class="browser-default tooltipped" data-tooltip="Seleccione la ubicación" required>
+                <option value="" disabled selected>Seleccione la Ubicación</option>
+                <?!=listUbicacion;?>
+              </select>
+            </div>
+
+            <div class="col s12 m6">
+              <b>Departamento:</b>
+              <select id="departamento" class="browser-default tooltipped" data-tooltip="Seleccione el departamento"
+                required>
+                <option value="" disabled selected>Seleccione el Departamento</option>
+                <?!=listDepartamento;?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Provincia / Distrito -->
+          <div class="row">
+            <div class="col s12 m6">
+              <b>Provincia:</b>
+              <select id="provincia" class="browser-default tooltipped" data-tooltip="Seleccione la provincia" required>
+                <option value="" disabled selected>Seleccione la Provincia</option>
+                <?!=listProvincia;?>
+              </select>
+            </div>
+
+            <div class="col s12 m6">
+              <b>Distrito:</b>
+              <select id="distrito" class="browser-default tooltipped" data-tooltip="Seleccione el distrito" required>
+                <option value="" disabled selected>Seleccione el Distrito</option>
+                <?!=listDistrito;?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Sede --->
+          <div class="row">
+            <div class="input-field col s12 m6">
+              <label><b>Código de Sede:</b></label>
+              <i class="material-icons prefix tooltipped"
+                data-tooltip="Ingrese el código de sede">confirmation_number</i>
+              <input placeholder="Ej: 111" id="codSede" type="text" class="validate tooltipped"
+                onkeyup="mayusculas(this);" onchange="buscarSedeCodigo(this);" 
+                data-tooltip="Código único de la sede" required autocomplete="off">
+            </div>
+
+            <div class="input-field col s12 m6">
+              <label><b>Nombre de Sede:</b></label>
+              <i class="material-icons prefix tooltipped" data-tooltip="Nombre descriptivo">business</i>
+              <input placeholder="Ej: LIMA CENTRO" id="sede" type="text" class="validate tooltipped"
+                onkeyup="mayusculas(this);" data-tooltip="Nombre descriptivo de la sede" required autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Piso / Area -->
+          <div class="row">
+            <div class="col s12 m6">
+              <b>Número de Piso:</b>
+              <select id="piso" class="browser-default tooltipped" data-tooltip="Seleccione el piso" required>
+                <option value="" disabled selected>Numero de Piso</option>
+                <?!=listPiso;?>
+              </select>
+            </div>
+
+            <div class="col s12 m6">
+              <b>Nombre de Área</b>
+              <select id="area" class="browser-default tooltipped" data-tooltip="Seleccione el área" required>
+                <option value="" disabled selected>Seleccione área</option>
+                <?!=listArea;?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Técnico Responsable -->
+          <div class="row">
+            <div class="col s12">
+              <b>Técnico Responsable:</b>
+              <select id="responsable" class="browser-default tooltipped"
+                data-tooltip="Seleccione el técnico responsable" required>
+                <option value="" disabled selected>Técnico Responsable</option>
+                <?!=listTecnico;?>
+              </select>
+            </div>
+          </div>
+
+          <!-- Bloquear / Desbloquear (switch) -->
+          <div class="row">
+            <div class="col s12">
+              <blockquote>
+                <br><b>Bloquear:</b> Fija datos repetitivos de Usuario/Ubicación.
+                <br><b>Desbloquear:</b> Habilita la modificación de Datos.
+              </blockquote>
+
+              <div class="switch tooltipped" data-tooltip="Bloquea/Desbloquea campos repetitivos">
+                <label>
+                  Desbloquear
+                  <input type="checkbox" id="seteo" onchange="blockSet(this);">
+                  <span class="lever"></span>
+                  Bloquear
+                </label>
+              </div>
+
+              <hr class="new4">
+            </div>
+          </div>
+
+        </div> <!-- /superior -->
+
+        <!-- === intermedio (identificador, serie, tipo, marca, modelo, estado) === -->
+        <div class="row" id="intermedio">
+          <div class="input-field col s12 m6">
+            <label><b>COD</b></label>
+            <i class="material-icons prefix tooltipped" data-tooltip="Código de Inventario">textsms</i>
+            <input placeholder="Código de Inventario" id="identificador" type="text" class="autocomplete tooltipped"
+              onkeyup="mayusculas(this);" data-tooltip="Código de inventario" required autocomplete="off">
+          </div>
+
+          <div class="input-field col s12 m6">
+            <label><b>NS:</b></label>
+            <i class="material-icons prefix tooltipped" data-tooltip="Número de Serie">textsms</i>
+            <input placeholder="Serie" id="serie" type="text" class="autocomplete tooltipped"
+              onkeyup="mayusculas(this);" data-tooltip="Número de serie" required autocomplete="off">
+          </div>
+
+          <!-- === TIPIFICACIÓN PARA OCULTAR CAMPOS QUE INDUZCAN AL ERROR === -->
+
+
+          <div class="col s12 m6">
+            <b>Tipo de Equipo:</b>
+            <select id="tipoEq" class="browser-default tooltipped" data-tooltip="Seleccione el tipo de equipo"
+              onchange="tipificacion(this);" required>
+              <option value="" disabled selected> Tipo de equipo </option>
+              <?!=listTipo;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6">
+            <b>Marca:</b>
+            <select id="marca" class="browser-default tooltipped" data-tooltip="Seleccione la marca" required>
+              <option value="" disabled selected>Marca</option>
+              <?!=listMarca;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6" style="margin-top:12px;">
+            <b>Modelo de Equipo:</b>
+            <select id="modelo" class="browser-default tooltipped" data-tooltip="Seleccione el modelo" required>
+              <option value="" disabled selected> Modelo de equipo </option>
+              <?!=listModelo;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6" style="margin-top:12px;">
+            <b>Estado:</b>
+            <select id="estado" class="browser-default tooltipped" data-tooltip="Estado actual del Equipo" required>
+              <option value="" disabled selected>Estado actual del Equipo</option>
+              <?!=listEstado;?>
+            </select>
+          </div>
+        </div> <!-- /intermedio -->
+
+        <!-- === inferior (disco, procesador, ram, so, hostname, ip) === -->
+        <div class="row" id="inferior">
+          <div class="col s12 m6">
+            <b>Tipo de disco:</b>
+            <select id="disco" class="browser-default tooltipped" data-tooltip="Tipo de disco" required>
+              <option value="" disabled selected>Tipo de Disco</option>
+              <?!=listDisco;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6">
+            <b>Tamaño:</b>
+            <select id="discoCap" class="browser-default tooltipped" data-tooltip="Capacidad del disco" required>
+              <option value="" disabled selected>Capacidad del Disco</option>
+              <?!=listDiscoCap;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6" style="margin-top:12px;">
+            <b>Modelo Procesador</b>
+            <select id="procesador" class="browser-default tooltipped" data-tooltip="Modelo procesador" required>
+              <option value="" disabled selected>Procesador</option>
+              <?!=listProcesador;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6" style="margin-top:12px;">
+            <b>Velocidad de Procesador:</b>
+            <select id="procesadorVel" class="browser-default tooltipped" data-tooltip="Velocidad de procesador"
+              required>
+              <option value="" disabled selected>Velocidad</option>
+              <?!=listProcesadorVel;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6" style="margin-top:12px;">
+            <b>Ram</b>
+            <select id="ram" class="browser-default tooltipped" data-tooltip="Cantidad de memoria RAM" required>
+              <option value="" disabled selected>Cantidad de memoria ram</option>
+              <?!=listRam;?>
+            </select>
+          </div>
+
+          <div class="col s12 m6" style="margin-top:12px;">
+            <b>Sistema Operativo:</b>
+            <select id="so" class="browser-default tooltipped" data-tooltip="Sistema operativo instalado" required>
+              <option value="" disabled selected>Seleccione Sistema Operativo</option>
+              <?!=listSO;?>
+            </select>
+          </div>
+
+          <!-- Hostname / IP -->
+          <div class="input-field col s12 m6" style="margin-top:12px;">
+            <label><b>Hostname:</b></label>
+            <input placeholder="Hostname" id="hostname" type="text" class="validate tooltipped"
+              onkeyup="mayusculas(this);" data-tooltip="Hostname del equipo" required autocomplete="off">
+          </div>
+
+          <div class="input-field col s12 m6" style="margin-top:12px;">
+            <label><b>IP:</b></label>
+            <input placeholder="dirección IP del Equipo" id="ipAddress" type="text" class="validate tooltipped"
+              onkeyup="mayusculas(this);" data-tooltip="IP del equipo" required autocomplete="off">
+          </div>
+        </div> <!-- /inferior -->
+
+        <!-- Equipo asociado - SOLO para periféricos -->
+        <div class="row" id="divAsociado" style="display: none;">
+          <div class="input-field col s12">
+            <i class="material-icons prefix tooltipped" data-tooltip="Equipo asociado (PC principal)">phonelink</i>
+            <input placeholder="Código/Serie de la PC a la que pertenece*" id="asociado" type="text"
+              class="autocomplete tooltipped" onkeyup="mayusculas(this);" data-tooltip="Equipo asociado"
+              autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="row" id="divObservaciones">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">mode_edit</i>
+            <textarea placeholder="Observaciones" id="observaciones" class="materialize-textarea"
+              data-length="200"></textarea>
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="row">
+          <div class="input-field col s12 center-align">
+            <button id="bInsert" class="waves-effect waves-light btn-small tooltipped"
+              data-tooltip="Registrar equipo en inventario"><i class="material-icons left">near_me</i>Insertar</button>
+            <button id="bClean" class="waves-effect waves-light btn-small tooltipped"
+              data-tooltip="Limpiar todos los campos del formulario"><i
+                class="material-icons left">cached</i>Reset</button>
+            <button id="bFinish" class="waves-effect waves-light btn-small tooltipped"
+              data-tooltip="Finalizar registro y salir"><i class="material-icons left">art_track</i>Finalizar</button>
+          </div>
+        </div>
+
+        <!-- Pie -->
+        <div class="row">
+          <div class="input-field col s12">
+            <div class="center-align">
+              <p>Portal de Inventario desarrollado por Team Alpha | All Rights Reserved</p>
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- /col -->
+    </div> <!-- /row -->
+  </div> <!-- /container -->
+
+  <!-- SCRIPTS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <?!=include("materialize");?>
+  <?!=include("js");?>
+
+</body>
+
+</html>

@@ -1,0 +1,333 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // EVENTOS PRINCIPALES
+        document.getElementById("bClean").addEventListener("click", limpiarFormulario);
+        document.getElementById("bInsert").addEventListener("click", registrarEquipo);
+
+        // Cargar comentarios para autocomplete
+        google.script.run
+            .withSuccessHandler(function (comentarios) {
+                const autocompletes = document.querySelectorAll('.autocomplete');
+                autocompletes.forEach(autocomplete => {
+                    const instance = M.Autocomplete.getInstance(autocomplete);
+                    if (instance) instance.destroy();
+                });
+                M.Autocomplete.init(autocompletes, {
+                    data: comentarios,
+                    limit: 8,
+                    minLength: 1
+                });
+            })
+            .getComentarios();
+    });
+
+
+    // ###############################################################
+    //  1. MAYÚSCULAS               
+    // ###############################################################
+    function mayusculas(campo) {
+        campo.value = campo.value.toUpperCase();
+    }
+
+
+    // ###############################################################
+    //  2. BÚSQUEDAS AUTOMÁTICAS (USUARIO / SEDE) 
+    // ###############################################################
+
+    // Buscar usuario por dominio
+    function buscarUsuarioDominio(input) {
+        const usuarioDom = input.value.trim();
+        if (usuarioDom.length > 0) {
+            input.disabled = true;
+
+            google.script.run
+                .withSuccessHandler(function (nombreCompleto) {
+                    actualizarNombreUsuario(nombreCompleto, usuarioDom);
+                    input.disabled = false;
+                })
+                .withFailureHandler(function () {
+                    input.disabled = false;
+                })
+                .getUsuarioDominio(usuarioDom);
+        }
+    }
+
+    function actualizarNombreUsuario(nombreCompleto) {
+        const inputNombres = document.getElementById("usuario");
+        if (nombreCompleto && nombreCompleto !== '') {
+            inputNombres.value = nombreCompleto;
+        } else {
+            inputNombres.value = "";
+            inputNombres.focus();
+        }
+    }
+
+    // Buscar sede por código
+    function buscarSedeCodigo(input) {
+        const codigo = input.value.trim();
+        if (codigo.length > 0) {
+            input.disabled = true;
+
+            google.script.run
+                .withSuccessHandler(function (nombreSede) {
+                    actualizarNombreSede(nombreSede, codigo);
+                    input.disabled = false;
+                })
+                .withFailureHandler(function () {
+                    input.disabled = false;
+                })
+                .getNombreSede(codigo);
+        }
+    }
+
+    function actualizarNombreSede(nombreSede) {
+        const inputSede = document.getElementById("sede");
+        inputSede.value = nombreSede && nombreSede !== '' ? nombreSede : "";
+        M.updateTextFields();
+    }
+
+
+    // ###############################################################
+    //  3. TIPIFICACIÓN / BLOQUEO
+    // ###############################################################
+
+    // Tipificación dinámica - mostrar/ocultar campos según tipo de equipo
+    function tipificacion(select) {
+        const tipo = select.value;
+        const inferior = document.getElementById("inferior");
+        const divAsociado = document.getElementById("divAsociado");
+        const campoAsociado = document.getElementById("asociado");
+
+        if (tipo === "MONITOR" || tipo === "TECLADO") {
+            // Periféricos
+            inferior.style.display = "none";
+            divAsociado.style.display = "block";
+            campoAsociado.required = true;
+            campoAsociado.placeholder = "Código del equipo al que pertenece*";
+
+            ["ram", "disco", "discoCap", "procesador", "procesadorVel", "so", "hostname", "ipAddress"]
+                .forEach(id => document.getElementById(id).value = "NINGUNO");
+
+        } else {
+            // Equipos principales
+            inferior.style.display = "block";
+            divAsociado.style.display = "none";
+            campoAsociado.required = false;
+            campoAsociado.placeholder = "Equipo Asociado";
+
+            ["ram", "disco", "discoCap", "procesador", "procesadorVel", "so"]
+                .forEach(id => document.getElementById(id).selectedIndex = 0);
+
+            ["hostname", "ipAddress", "asociado"]
+                .forEach(id => document.getElementById(id).value = "");
+        }
+
+        M.updateTextFields();
+        document.querySelectorAll('select').forEach(sel => M.FormSelect.init(sel));
+    }
+
+    // Switch bloquear/desbloquear campos superiores
+    function blockSet(check) {
+        const camposSuperiores = {
+            usuario: "Nombres completos",
+            userdom: "Usuario de dominio",
+            ubicacion: "Ubicación",
+            departamento: "Departamento",
+            provincia: "Provincia",
+            distrito: "Distrito",
+            sede: "Nombre de sede",
+            codSede: "Código de sede",
+            piso: "Piso",
+            area: "Área",
+            responsable: "Técnico responsable"
+        };
+
+        if (check.checked) {
+            for (const [id, nombre] of Object.entries(camposSuperiores)) {
+                const campo = document.getElementById(id);
+                const valor = campo.tagName === 'SELECT'
+                    ? campo.options[campo.selectedIndex].value
+                    : campo.value.trim();
+
+                if (!valor) {
+                    M.toast({ html: Complete: ${nombre} antes de bloquear });
+                    check.checked = false;
+                    return;
+                }
+            }
+        }
+
+        for (const id of Object.keys(camposSuperiores)) {
+            document.getElementById(id).disabled = check.checked;
+        }
+
+        const superior = document.getElementById("superior");
+        superior.style.background = check.checked ? "#e8f5e8" : "white";
+    }
+
+
+    // ###############################################################
+    //  4. GESTIÓN DE FORMULARIO (DATOS / VALIDAR / GUARDAR / LIMPIAR) 
+    // ###############################################################
+
+    // Recolectar datos del formulario
+    function recolectarDatosFormulario() {
+        const tipoEquipo = document.getElementById("tipoEq").value;
+        const registro = {
+            usuario: document.getElementById("usuario").value,
+            userdom: document.getElementById("userdom").value,
+            ubicacion: document.getElementById("ubicacion").value,
+            departamento: document.getElementById("departamento").value,
+            provincia: document.getElementById("provincia").value,
+            distrito: document.getElementById("distrito").value,
+            sede: document.getElementById("sede").value,
+            codSede: document.getElementById("codSede").value,
+            piso: document.getElementById("piso").value,
+            area: document.getElementById("area").value,
+            responsable: document.getElementById("responsable").value,
+            id: document.getElementById("identificador").value,
+            serie: document.getElementById("serie").value,
+            tipoEq: tipoEquipo,
+            marca: document.getElementById("marca").value,
+            modelo: document.getElementById("modelo").value,
+            ram: document.getElementById("ram").value,
+            disco: document.getElementById("disco").value,
+            discoCap: document.getElementById("discoCap").value,
+            procesador: document.getElementById("procesador").value,
+            procesadorVel: document.getElementById("procesadorVel").value,
+            so: document.getElementById("so").value,
+            hostname: document.getElementById("hostname").value,
+            ipAddress: document.getElementById("ipAddress").value,
+            estado: document.getElementById("estado").value,
+            observaciones: document.getElementById("observaciones").value,
+            asociado: tipoEquipo === "MONITOR" || tipoEquipo === "TECLADO"
+                ? document.getElementById("asociado").value : ""
+        };
+        return registro;
+    }
+
+    // Validar formulario
+    function validarFormulario() {
+        const datos = recolectarDatosFormulario();
+        const tipoEquipo = datos.tipoEq;
+
+        const camposRequeridos = {
+            usuario: "Nombres de usuario",
+            userdom: "Usuario de dominio",
+            ubicacion: "Ubicación",
+            departamento: "Departamento",
+            provincia: "Provincia",
+            distrito: "Distrito",
+            sede: "Nombre de sede",
+            codSede: "Código de sede",
+            piso: "Piso",
+            area: "Área",
+            responsable: "Técnico responsable",
+            identificador: "Código de inventario",
+            serie: "Número de serie",
+            tipoEq: "Tipo de equipo",
+            marca: "Marca",
+            modelo: "Modelo",
+            estado: "Estado del equipo"
+        };
+
+        if (tipoEquipo === "MONITOR" || tipoEquipo === "TECLADO") {
+            camposRequeridos.asociado = "Equipo asociado (PC principal)";
+        } else {
+            Object.assign(camposRequeridos, {
+                ram: "Memoria RAM",
+                disco: "Tipo de disco",
+                discoCap: "Capacidad de disco",
+                procesador: "Procesador",
+                procesadorVel: "Velocidad de procesador",
+                so: "Sistema operativo",
+                hostname: "Hostname",
+                ipAddress: "Dirección IP"
+            });
+        }
+
+        for (const [campoId, nombreCampo] of Object.entries(camposRequeridos)) {
+            const elemento = document.getElementById(campoId);
+            if (!elemento) continue;
+
+            const valor = elemento.tagName === 'SELECT'
+                ? elemento.options[elemento.selectedIndex].value
+                : elemento.value.trim();
+
+            if (!valor) {
+                M.toast({ html: Complete: ${nombreCampo} });
+                elemento.focus();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Registrar equipo
+    function registrarEquipo() {
+        if (!validarFormulario()) return;
+
+        const datosRegistro = recolectarDatosFormulario();
+
+        if (datosRegistro.tipoEq === "MONITOR" || datosRegistro.tipoEq === "TECLADO") {
+            ["ram", "disco", "discoCap", "procesador", "procesadorVel", "so", "hostname", "ipAddress"]
+                .forEach(id => datosRegistro[id] = "NINGUNO");
+        }
+
+        google.script.run
+            .withSuccessHandler(() => {
+                M.toast({ html: 'Registro ingresado correctamente!' });
+                limpiarFormularioParcial();
+            })
+            .withFailureHandler(error => {
+                M.toast({ html: 'Error al guardar: ' + error });
+            })
+            .userClicked(datosRegistro);
+    }
+
+    // Limpiar formulario parcial
+    function limpiarFormularioParcial() {
+        const seteoActivado = document.getElementById("seteo").checked;
+
+        if (!seteoActivado) return limpiarFormulario();
+
+        const camposEquipo = [
+            "identificador", "serie", "tipoEq", "marca", "modelo",
+            "ram", "disco", "discoCap", "procesador", "procesadorVel",
+            "so", "hostname", "ipAddress", "estado", "asociado", "observaciones"
+        ];
+
+        camposEquipo.forEach(id => {
+            const campo = document.getElementById(id);
+            if (campo.tagName === 'SELECT') {
+                campo.selectedIndex = 0;
+                M.FormSelect.init(campo);
+            } else {
+                campo.value = "";
+            }
+        });
+
+        document.getElementById("inferior").style.display = "block";
+        document.getElementById("divAsociado").style.display = "block";
+    }
+
+    // Limpiar formulario completo
+    function limpiarFormulario() {
+        document.querySelectorAll('input, select, textarea').forEach(campo => {
+            if (campo.tagName === "SELECT") {
+                campo.selectedIndex = 0;
+            } else {
+                campo.value = "";
+            }
+        });
+
+        const seteo = document.getElementById("seteo");
+        if (seteo) seteo.checked = false;
+
+        document.getElementById("inferior").style.display = "block";
+        document.getElementById("divAsociado").style.display = "block";
+        document.getElementById("superior").style.background = "white";
+
+        document.querySelectorAll('select').forEach(select => M.FormSelect.init(select));
+    }
+</script>

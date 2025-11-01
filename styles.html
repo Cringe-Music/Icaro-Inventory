@@ -1,0 +1,114 @@
+<style>
+  /* === ESTILOS ORIGINALES === */
+  .form-row {
+    margin-bottom: 15px;
+  }
+
+  .boton {
+    text-decoration: none;
+    padding: 10px;
+    font-weight: 600;
+    font-size: 20px;
+    color: #ffffff;
+    background-color: #1883ba;
+    border-radius: 6px;
+    border: 2px solid #0016b0;
+  }
+
+  .boton:hover {
+    color: #1883ba;
+    background-color: #ffffff;
+  }
+
+  hr.new4 {
+    border: 2px solid purple;
+    border-radius: 5px;
+  }
+
+  .switch {
+    padding: 10px;
+  }
+
+  /* === NUEVOS ESTILOS COMPLEMENTARIOS === */
+  body {
+    background-color: #f4f6f7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .container {
+    background: white;
+    border-radius: 12px;
+    padding: 30px 40px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 1200px;
+    margin: 20px auto;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
+  }
+
+  .input-field {
+    margin-top: 15px;
+  }
+
+  .btn {
+    margin: 5px;
+  }
+
+  .tooltipped {
+    cursor: pointer;
+  }
+
+  /* Estilos para secciones ocultas */
+  #inferior[style*="display: none"],
+  #divAsociado[style*="display: none"] {
+    display: none !important;
+  }
+
+  /* Mejoras visuales para selects */
+  .browser-default {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+  }
+
+  /* Efectos hover para botones */
+  .btn-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .container {
+      padding: 20px;
+      margin: 10px;
+    }
+    
+    .btn-small {
+      width: 100%;
+      margin: 5px 0;
+    }
+  }
+
+  /* Estilo para campos bloqueados */
+  input:disabled, select:disabled, textarea:disabled {
+    background-color: #f5f5f5 !important;
+    color: #666 !important;
+    border-color: #ddd !important;
+  }
+
+  /* Estilo para sección superior cuando está bloqueada */
+  #superior {
+    transition: background-color 0.3s ease;
+  }
+</style>

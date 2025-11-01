@@ -1,0 +1,26 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar todos los selects
+        const selects = document.querySelectorAll('select');
+        M.FormSelect.init(selects);
+
+        // Inicializar autocompletes
+        const autocompletes = document.querySelectorAll('.autocomplete');
+        M.Autocomplete.init(autocompletes, {
+            data: {},
+            limit: 5
+        });
+
+        // Inicializar tooltips
+        const tooltips = document.querySelectorAll('.tooltipped');
+        M.Tooltip.init(tooltips);
+
+        // Inicializar textareas con character counter######
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            if (textarea.getAttribute('data-length')) {
+                M.CharacterCounter.init(textarea);
+            }
+        });
+    });
+</script>
